@@ -18,11 +18,11 @@ Qualitatively, particles experience a long-range repulsion caused by the elastic
 
 The model just described is solved applying Newton's equations using a certain integration time step &Delta;*t*, supplemented by a temperature control that ensures that the mean squared velocity of particles equals *T/2* (the particle mass is *m=1*). Initially, coordinates **x** are placed on a regular square grid inside the simulation box, velocities **v** are chosen randomly while ensuring $\langle$*v<sup>2</sup>*$\rangle$*=T/2*, initial forces **F** on all particles are calculated, time is set to *t=0*, and the time step is set to &Delta;*t=0.01*. The new coordinates **x** of particles at time *t+&Delta;t* are given in terms of the existing coordinates **x** and existing velocities **v** via the so-called temperature-controlled velocity Verlet algorithm, which consists of six successive operations
 
-1. **v** +=  **F**/(2&Delta;t), i.e., change velocities (first part)
+1. **v** +=  **F** &Delta;t/2, i.e., change velocities (first part)
 2. **x** +=  **v** &Delta;t, i.e., change coordinates
 3. **x** -= *L* round(**x**/*L*), i.e., fold particle coordinates back to the central simulation box
 4. calculate new forces **F** using the new coordinates **x**
-5. **v** +=  **F**/(2&Delta;t), i.e., change velocities (second part)
+5. **v** +=  **F** &Delta;t/2, i.e., change velocities (second part)
 6. multiply all **v** with a common factor so that $\langle$*v<sup>2</sup>*$\rangle$*=T/2*; this is the temperature control
 
 The above 6 commands constitute a single time step during which time *t* increased by &Delta;*t*.
