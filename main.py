@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib as plt
 import random as rn
+from numpy.linalg import norm
 from numpy.random import normal
 
 N = 30
@@ -66,7 +67,7 @@ def get_dist(L,x1,y1,x2,y2):
 
 def get_forces(N,L,X,Y):
 
-    
+
     return
 
 
