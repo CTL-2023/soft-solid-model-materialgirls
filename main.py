@@ -16,7 +16,7 @@ def create_initial_configuration(g,N):
     for i in range(N):
         for j in range(N):
             x = -L/2 + j * g
-            y = -L/2 + i *g
+            y = -L/2 + i * g
             nodes.append((x, y))
 
     return nodes, L
