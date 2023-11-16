@@ -88,9 +88,74 @@ def get_forces(N, L, X, Y):
                 for q in range(N):
                     dist_vect, abs_dist = get_dist(L, X[i], X[(i+1)%N], Y[j], Y[j])
 
+#flo solution
+"""
+def get_forces(N,L,X,Y):
+    N = N-1
+    X = np.reshape(X,(N,-1))
+    Y = np.reshape(Y,(N,-1))
+    M = np.shape(X)[1]
+    FX = np.zeros((N,M))
+    FY = np.zeros((N,M))
+    # storage_LJ = np.zeros((N,M,N,M))
+    # storage_spring = np.zeros((N,M,N,M))
+    storage_direction = np.zeros((N,M,N,M), dtype=object)
+    storage_R = np.zeros((N,M,N,M))
+    rc = 3.4
+    neighbours = np.array([[1,0],[-1,0],[0,1],[0,-1]])
+    if M == 1:
+        neighbours = np.array([[1,0],[-1,0]])
+    for n in range(N):
+        for m in range(M):
+            df = np.zeros((2))
+            R = np.zeros((N,M))
+            direction = np.zeros((N,N), dtype=object)
+            for i in range(N):
+                for u in range(M):
+                    if storage_R[n,m,i,u] == 0:
+                        direction[i,u] = get_dist(L,X[n,m],Y[n,m],X[i,u],Y[i,u])[0]
+                        R[i,u] = get_dist(L,X[n,m],Y[n,m],X[i,u],Y[i,u])[1]
+                        storage_R [n,m,i,u] = R[i,u]
+                        storage_direction[n,m,i,u] = direction[i,u]
+                        storage_R [i,u,n,m] = R[i,u]
+                        storage_direction[i,u,n,m] = -direction[i,u]
+                    else:
+                        R[i,u] = storage_R[n,m,i,u]
+                        direction[i,u] = storage_direction[n,m,i,u]
+                #     if R[i,u] <= rc and R[i,u] != 0:
+                #         flennard = (24*R[i,u]**6-48)/(R[i,u]**13)
+                # # print(direction[i[0],i[1]])
+                #         df += flennard * direction[i,u]/np.linalg.norm(direction[i,u])
+            for neighbour in neighbours:
+                df -= k * direction[(n+neighbour[0])%N,(m+neighbour[1])%N]
+                if np.linalg.norm(k * direction[(n+neighbour[0])%N,(m+neighbour[1])%N]) > 1000:
+                    print("spring")
+                
+            close_points = np.argwhere(R <= rc)
+            for i in close_points:
+                if R[i[0],i[1]] <= 0.0000000001:
+                   continue 
+                flennard = (24 * R[i[0],i[1]]**6 - 48)/(R[i[0],i[1]]**13)
+                # if np.linalg.norm(flennard * direction[i[0],i[1]]/np.linalg.norm(direction[i[0],i[1]])) > 10**15:
+                #     print("lennard")
+                #     print(R[i[0],i[1]])
+                #     plt.scatter([X[n,m],X[i[0],i[1]]],[Y[n,m],Y[i[0],i[1]]], color = ["b","r"],alpha=0.5)
+                #     plt.ylim(-L/2-0.1,L/2+0.1)
+                #     plt.xlim(-L/2-0.1,L/2+0.1)
+                #     plt.show()
+                # print(direction[i[0],i[1]])
+                df += flennard * direction[i[0],i[1]]/np.linalg.norm(direction[i[0],i[1]])
+            if np.linalg.norm(df) > 10**15:
+                print(np.linalg.norm(df))
+                # df[1] += flennard * direction[i[0],i[1]][1]/np.linalg.norm(direction[i[0],i[1]])
+                # print(flennard * direction[i[0],i[1]][0]/np.linalg.norm(direction[i[0],i[1]]),flennard * direction[i[0],i[1]][1]/np.linalg.norm(direction[i[0],i[1]]))
+            FX[n,m] = df[0]
+            FY[n,m] = df[1]
+    return FX, FY
+"""
 
 
-            
+
 def main():
     N, T = 10_000, 273.15
     vx, vy = create_initial_velocities(N, T)

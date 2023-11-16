@@ -12,7 +12,7 @@ T = 0.1 #up to 0.6
 
 
 def create_initial_configuration(g, N):
-    L = g * (N-1)
+    L = g * N
     X, Y = np.zeros((N, N)), np.zeros((N, N))  
     for i in range(N):
         for j in range(N):
