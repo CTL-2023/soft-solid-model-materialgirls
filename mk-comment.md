@@ -5,7 +5,7 @@ In this function you had (rc/r) in the LJ potential, but it should be (1/r). The
     def Lennard_Jones(r, r_c, k_LJ, norm_vect): #r = float, norm_vect from get_dist to get direction of force
         r, r_c = float(r), float(r_c)
         sigma = 1; # MK ADDED HERE AND BELOW 
-        delta = 1e-5*sigma  # MK modified
+        delta = 1e-5*sigma  # MK modified 
     
         if r >= r_c or r == 0:
             return (0, 0)
