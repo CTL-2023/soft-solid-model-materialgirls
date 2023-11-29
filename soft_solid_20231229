@@ -1,0 +1,245 @@
+import numpy as np
+from numpy.random import normal
+from matplotlib import pyplot as plt
+from tqdm import tqdm
+import imageio.v2 as imageio
+import os
+import shutil
+from datetime import datetime
+
+def create_initial_configuration(g, N):
+    L = g * N
+    X, Y = np.zeros((N, N)), np.zeros((N, N))
+    
+    for i in range(N):
+        for j in range(N):
+            x, y = j*g - L/2 + g/2, i*g - L/2 + g/2
+            X[i, j], Y[i, j] = x, y
+    
+    return X, Y, L
+
+def create_initial_velocities(N, T): 
+    vx, vy = [normal(loc=0, scale=np.sqrt(T/2), size=(N, N)) for _ in range(2)]
+    vx -= np.mean(vx)
+    vy -= np.mean(vy)
+    return vx, vy
+
+def thermostat(N, T, vx, vy):
+    E_k = 0
+
+    for i in tqdm(range(N), desc='Calculating E_k, func:\'thermostat()\''):
+        for j in range(N):
+            E_k += vx[i][j]**2 + vy[i][j]**2
+
+    return E_k, N**2 * T, np.mean(vx), np.mean(vy)
+
+def get_dist(L, x1, x2, y1, y2):
+    dx, dy = x2 - x1, y2 - y1
+    dx -= L * np.round(dx / L)
+    dy -= L * np.round(dy / L)
+    dist_vect = [dy, dx]
+    r = np.linalg.norm(dist_vect)
+    
+    if r == 0:
+        dist_vect = norm_vect = [0, 0]
+        return dist_vect, r, norm_vect
+
+    norm_vect = [entry/r for entry in dist_vect]
+
+    return dist_vect, r, norm_vect
+
+def get_spring_forces(N, L, X, Y, k_S):
+    spring_forces_X, spring_forces_Y = np.zeros((N, N)), np.zeros((N, N))
+
+    for i in range(N):
+        for j in range(N):
+            dist_vect = get_dist(L, X[i, j], X[i, (j+1)%N], Y[i, j], Y[i, (j+1)%N])[0]
+            spring_force_X, spring_force_Y = k_S*dist_vect[1], k_S*dist_vect[0]
+            spring_forces_X[i, j] += spring_force_X
+            spring_forces_X[i, (j+1)%N] -= spring_force_X
+            spring_forces_Y[i, j] += spring_force_Y
+            spring_forces_Y[i, (j+1)%N] -= spring_force_Y
+            
+            dist_vect = get_dist(L, X[i, j], X[(i+1)%N, j], Y[i, j], Y[(i+1)%N, j])[0]
+            spring_force_X, spring_force_Y = k_S*dist_vect[1], k_S*dist_vect[0]
+            spring_forces_X[i, j] += spring_force_X
+            spring_forces_X[(i+1)%N, j] -= spring_force_X
+            spring_forces_Y[i, j] += spring_force_Y
+            spring_forces_Y[(i+1)%N, j] -= spring_force_Y
+
+    
+    return spring_forces_X, spring_forces_Y
+
+def Lennard_Jones(r, r_c, k_LJ, norm_vect):
+    if r >= r_c or r == 0:
+        return [0, 0]
+
+    else:
+        gradient_value = 24 * k_LJ * (r**-7 - 2*r**-13)
+        gradient = [entry*gradient_value for entry in norm_vect]
+
+    return gradient
+
+def get_LJ_forces(N, L, X, Y, k_LJ, r_c):
+    LJ_forces_X, LJ_forces_Y = np.zeros((N, N)), np.zeros((N, N))
+
+    for h in range(N):
+        for i in range(N):
+            x1, y1 = X[h, i], Y[h, i]
+            for j in range(N):
+                for k in range(N):
+                    x2, y2 = X[j, k], Y[j, k]
+                    dist_vect, r, norm_vect = get_dist(L, x1, x2, y1, y2)
+                    LJ_vect = Lennard_Jones(r, r_c, k_LJ, norm_vect)
+                    LJ_forces_X[h, i] += LJ_vect[1]
+                    LJ_forces_Y[h, i] += LJ_vect[0]
+
+    return LJ_forces_X, LJ_forces_Y
+
+def total_forces(N, L, X, Y, k_S, k_LJ, r_c):
+    if k_LJ == 0 or r_c >= L/2:
+        return get_spring_forces(N, L, X, Y, k_S)
+
+    elif k_S == 0:
+        return get_LJ_forces(N, L, X, Y, k_LJ, r_c)
+    
+    else:
+        LJ_forces_X, LJ_forces_Y = get_LJ_forces(N, L, X, Y, k_LJ, r_c)
+        spring_forces_X, spring_forces_Y = get_spring_forces(N, L, X, Y, k_S)
+        
+        forces_x = LJ_forces_X + spring_forces_X
+        forces_y = LJ_forces_Y + spring_forces_Y
+
+        return forces_x, forces_y
+
+def single_MD_step(N, L, T, dt, X, Y, vx, vy, forces_x, forces_y, k_S, k_LJ, r_c):
+    vx += forces_x * dt/2
+    vy += forces_y * dt/2
+
+    X += vx * dt
+    Y += vy * dt
+    X = (X+L/2)%L - L/2
+    Y = (Y+L/2)%L - L/2
+
+    forces_x, forces_y = total_forces(N, L, X, Y, k_S, k_LJ, r_c)
+
+    vx += forces_x * dt/2
+    vy += forces_y * dt/2   
+
+    vx *= np.sqrt(T/2) / np.std(vx)
+    vy *= np.sqrt(T/2) / np.std(vy)
+
+    return X, Y, vx, vy, forces_x, forces_y
+
+def order_parameter(N, L, X, Y, cutoff_distance):
+    phi = 0
+
+    for h in range(N):
+        for i in range(N):
+            x1, y1 = X[h, i], Y[h, i]
+            j, k = 0, 0
+            while j < N:
+                while k < N:
+                    x2, y2 = X[j, k], Y[j, k]
+                    if get_dist(L, x1, x2, y1, y2)[1] <= cutoff_distance:
+                        j = k = N
+                        phi += 1
+                    else:
+                        j += 1
+                        k += 1
+    
+    phi = (phi - N) / N**2
+
+    return phi
+
+def visualize_configuration(X, Y, g, N, T, dt, k_S, steps, k_LJ, r_c, L, cutoff_distance):
+    plt.clf()
+    plt.cla()
+    order_param = order_parameter(N, L, X, Y, cutoff_distance)
+    
+    # Plot lines connecting points
+    for i in range(N):
+        for j in range(N-1):
+            plt.plot([X[i, j], X[i, j+1]], [Y[i, j], Y[i, j+1]], color='grey')
+            plt.plot([X[j, i], X[j+1, i]], [Y[j, i], Y[j+1, i]], color='grey')
+    
+    # Plot additional lines
+    for i in range(N):
+        if abs(get_dist(L, X[i, 0]+L, X[i, N-1], Y[i, 0], Y[i, N-1])[1]) < L/2:
+            plt.plot([X[i, 0]+L, X[i, N-1]], [Y[i, 0], Y[i, N-1]], color='grey')
+        if abs(get_dist(L, X[i, 0], X[i, N-1]-L, Y[i, 0], Y[i, N-1])[1]) < L/2:
+            plt.plot([X[i, 0], X[i, N-1]-L], [Y[i, 0], Y[i, N-1]], color='grey')
+        if abs(get_dist(L, X[0, i], X[N-1, i], Y[0, i], Y[N-1, i]-L)[1]) < L/2:
+            plt.plot([X[0, i], X[N-1, i]], [Y[0, i], Y[N-1, i]-L], color='grey')
+        if abs(get_dist(L, X[0, i], X[N-1, i], Y[0, i]+L, Y[N-1, i])[1]) < L/2:
+            plt.plot([X[0, i], X[N-1, i]], [Y[0, i]+L, Y[N-1, i]], color='grey')
+
+    plt.scatter(X, Y, color='black')
+    
+    plt.axis('equal')
+    plt.xlim(-L/2, L/2)
+    plt.ylim(-L/2, L/2)
+    
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.title(f'$g={g},\;N={N},\;T={T},\;dt={dt},\;n_{{steps}}={steps},$ \n $k_S={k_S},\;k_{{LJ}}={k_LJ},\;r_c={r_c},\;\Phi={order_param:.2f}$')
+    plt.xticks([])
+    plt.yticks([])
+
+def create_video(fps):
+    images = []
+    image_folder = '/Users/nicol/Documents/Python_Projects/CTL_II/Soft_Solid/png/'
+    video_folder = '/Users/nicol/Documents/Python_Projects/CTL_II/Soft_Solid/mp4/'
+    images.clear()
+
+    for filename in sorted(os.listdir(image_folder), key=lambda x: int(x.split('_')[1].split('.')[0])):
+        if filename.endswith('.png'):
+            file_path = os.path.join(image_folder, filename)
+            images.append(imageio.imread(file_path))
+    current_datetime = datetime.now()
+    formatted_datetime = current_datetime.strftime("%Y.%m.%d_%H.%M.%S")
+    video_path = f'{video_folder}output_{formatted_datetime}.mp4'
+    imageio.mimsave(video_path, images, fps=fps)
+
+    print(f"Video created successfully: {video_path}")
+
+def delete_folder_contents():
+    folder_path = '/Users/nicol/Documents/Python_Projects/CTL_II/Soft_Solid/png'
+    if os.path.exists(folder_path):
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print(f"Error deleting {file_path}: {e}")
+        print(f"Contents of folder '{folder_path}' deleted.")
+    else:
+        print(f"Folder '{folder_path}' does not exist.")
+
+def molecular_dynamics():
+    g = 3.5
+    N = 15
+    T = 0.3
+    dt = 0.005
+    k_S = 0.0
+    steps = 50
+    k_LJ = 500000
+    r_c = 20
+    cutoff_distance = 1.5
+    
+    X, Y, L = create_initial_configuration(g, N)
+    vx, vy = create_initial_velocities(N, T)
+    forces_x, forces_y = total_forces(N, L, X, Y, k_S, k_LJ, r_c)
+
+    for i in tqdm(range(steps), desc='Generating frames'):
+        X, Y, vx, vy, forces_x, forces_y = single_MD_step(N, L, T, dt, X, Y, vx, vy, forces_x, forces_y, k_S, k_LJ, r_c)
+        visualize_configuration(X, Y, g, N, T, dt, k_S, steps, k_LJ, r_c, L, cutoff_distance)
+        plt.savefig(f'/Users/nicol/Documents/Python_Projects/CTL_II/Soft_Solid/png/plot_{i}.png')
+    
+
+if __name__ == "__main__":
+    delete_folder_contents()
+    molecular_dynamics()
+    #create_video(fps=5)
