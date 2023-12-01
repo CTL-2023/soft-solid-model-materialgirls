@@ -169,7 +169,7 @@ def order_parameter(N, L, X, Y, cutoff_distance):
 
     return phi, order_array
 
-def visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, cutoff_distance, step, sigma, show_grid):
+def visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, cutoff_distance, step, r_0, show_grid):
     plt.clf()
     plt.cla()
     order_param, order_array = order_parameter(N, L, X, Y, cutoff_distance)
@@ -245,7 +245,7 @@ def visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, cutoff_distanc
     plt.ylim(-L/2, L/2)
     
     plt.gca().set_aspect('equal', adjustable='box')
-    plt.title(f'$g={g},\;N={N},\;T={T},\;\Delta t={dt},\;t={step*dt:.2f},$ \n $k_S={k_S},\;k_{{LJ}}={k_LJ},\;r_c={r_c},\;r_0^{{\;LJ}}={2**(1/6)/sigma:.2f},\;\Phi={order_param:.2f}$')
+    plt.title(f'$g={g},\;N={N},\;T={T},\;\Delta t={dt},\;t={step*dt:.2f},$ \n $k_S={k_S},\;k_{{LJ}}={k_LJ},\;r_c={r_c},\;r_0^{{\;LJ}}={r_0:.2f},\;\Phi={order_param:.2f}$')
     plt.xticks([])
     plt.yticks([])
 
@@ -295,11 +295,12 @@ def molecular_dynamics():
     T = 0.2                 # Temperature, usually <1
     dt = 0.02               # Time step, usually < 0.05
     k_S = 0.05              # Spring constant
-    steps = 10_000         # Number of simulated steps
+    steps = 10_000          # Number of simulated steps
     k_LJ = 1                # Lennard-Jones-prefactor
     r_c = 3.4               # For all r>r_c, the LJ-potential is set to 0
     cutoff_distance = 1.5   # Particles, who have at least one neighbouring particle closer than cutoff_distance contribute to the order parameter
     sigma = 1               # Influences the equilibrium distance (r_0) of the LJ-potential, r_0 = 2^(1/6)/sigma
+    r_0 = 2**(1/6)/sigma    # The gradient of the LJ-potential is 0 at r = r_0
     show_grid = True        # Sets if the grid is shown or not
 
     # Initialize system:
@@ -310,7 +311,7 @@ def molecular_dynamics():
     # Run the simulation:
     for step in tqdm(range(steps), desc='Generating frames'):
         X, Y, vx, vy, forces_x, forces_y = single_MD_step(N, L, T, dt, X, Y, vx, vy, forces_x, forces_y, k_S, k_LJ, r_c, sigma)
-        visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, cutoff_distance, step, sigma, show_grid)
+        visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, cutoff_distance, step, r_0, show_grid)
         plt.savefig(f'{png_folder}plot_{step}.png', dpi=100)
 
 if __name__ == "__main__":
