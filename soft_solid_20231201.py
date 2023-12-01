@@ -10,12 +10,13 @@ from datetime import datetime
 '''
 Manual:
 1.  Install all the necessary libraries
-2.  Decide for a my_folder directory and make the png and mp4 folders
+2.  Decide for a directory and make the png and mp4 folders, include these folders in the according constants
 3.  In molecular_dynamics(), set up all the preferred parameters
 4.  Run the code
 '''
 
-my_folder = '/Users/nicol/Documents/Python_Projects/CTL_II/Soft_Solid/' # Make sure that the folders my_folder/png & my_folder/mp4 exist.
+png_folder = '/Users/nicol/Documents/Python_Projects/CTL_II/Soft_Solid/png/' # Make sure that these folder exist, consider the differences between mac and PC
+mp4_folder = '/Users/nicol/Documents/Python_Projects/CTL_II/Soft_Solid/mp4/'
 
 def create_initial_configuration(g, N):
     L = g * N
@@ -168,7 +169,7 @@ def order_parameter(N, L, X, Y, cutoff_distance):
 
     return phi, order_array
 
-def visualize_configuration(X, Y, g, N, T, dt, k_S, steps, k_LJ, r_c, L, cutoff_distance, step, sigma, show_grid):
+def visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, cutoff_distance, step, sigma, show_grid):
     plt.clf()
     plt.cla()
     order_param, order_array = order_parameter(N, L, X, Y, cutoff_distance)
@@ -250,18 +251,16 @@ def visualize_configuration(X, Y, g, N, T, dt, k_S, steps, k_LJ, r_c, L, cutoff_
 
 def create_video(fps):
     images = []
-    image_folder = f'{my_folder}png/'
-    video_folder = f'{my_folder}mp4/'
     images.clear()
 
-    for filename in tqdm(sorted(os.listdir(image_folder), key=lambda x: int(x.split('_')[1].split('.')[0])), desc='Generating video'):
+    for filename in tqdm(sorted(os.listdir(png_folder), key=lambda x: int(x.split('_')[1].split('.')[0])), desc='Generating video'):
         if filename.endswith('.png'):
-            file_path = os.path.join(image_folder, filename)
+            file_path = os.path.join(png_folder, filename)
             images.append(imageio.imread(file_path))
     
     current_datetime = datetime.now()
     formatted_datetime = current_datetime.strftime("%Y.%m.%d_%H.%M.%S")
-    video_path = f'{video_folder}output_{formatted_datetime}.mp4'
+    video_path = f'{mp4_folder}output_{formatted_datetime}.mp4'
 
     if fps > 30:
         frame_skip = round(fps / 30)
@@ -275,7 +274,7 @@ def create_video(fps):
     print(f"Video created successfully: {video_path}")
 
 def delete_folder_contents():
-    folder_path = f'{my_folder}png'
+    folder_path = png_folder
     if os.path.exists(folder_path):
         for filename in os.listdir(folder_path):
             file_path = os.path.join(folder_path, filename)
@@ -296,7 +295,7 @@ def molecular_dynamics():
     T = 0.2                 # Temperature, usually <1
     dt = 0.02               # Time step, usually < 0.05
     k_S = 0.05              # Spring constant
-    steps = 10_000          # Number of simulated steps
+    steps = 10_000         # Number of simulated steps
     k_LJ = 1                # Lennard-Jones-prefactor
     r_c = 3.4               # For all r>r_c, the LJ-potential is set to 0
     cutoff_distance = 1.5   # Particles, who have at least one neighbouring particle closer than cutoff_distance contribute to the order parameter
@@ -311,8 +310,8 @@ def molecular_dynamics():
     # Run the simulation:
     for step in tqdm(range(steps), desc='Generating frames'):
         X, Y, vx, vy, forces_x, forces_y = single_MD_step(N, L, T, dt, X, Y, vx, vy, forces_x, forces_y, k_S, k_LJ, r_c, sigma)
-        visualize_configuration(X, Y, g, N, T, dt, k_S, steps, k_LJ, r_c, L, cutoff_distance, step, sigma, show_grid)
-        plt.savefig(f'{my_folder}png/plot_{step}.png', dpi=100)
+        visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, cutoff_distance, step, sigma, show_grid)
+        plt.savefig(f'{png_folder}plot_{step}.png', dpi=100)
 
 if __name__ == "__main__":
     delete_folder_contents()    # Deletes all the frames from a previous simulation
