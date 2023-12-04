@@ -1,1 +1,4 @@
-[![Video]([thumbnail-image.jpg](https://www.google.com/url?sa=i&url=https%3A%2F%2Fstock.adobe.com%2Fde%2Fimages%2Fplay-video-icon%2F281189262&psig=AOvVaw0PT4O5lnlR6K4_61p8fTLN&ust=1701790501897000&source=images&cd=vfe&ved=0CBEQjRxqFwoTCKi_rOaN9oIDFQAAAAAdAAAAABAE)https://www.google.com/url?sa=i&url=https%3A%2F%2Fstock.adobe.com%2Fde%2Fimages%2Fplay-video-icon%2F281189262&psig=AOvVaw0PT4O5lnlR6K4_61p8fTLN&ust=1701790501897000&source=images&cd=vfe&ved=0CBEQjRxqFwoTCKi_rOaN9oIDFQAAAAAdAAAAABAE)]([your-video.mp4](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_videos/demo_11.mp4)https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_videos/demo_11.mp4)
+<video width="320" height="240" controls>
+  <source src="[your-video.mp4](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_videos/demo_3.mp4)https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_videos/demo_3.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
