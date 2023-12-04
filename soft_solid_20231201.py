@@ -10,12 +10,14 @@ from datetime import datetime
 '''
 Manual:
 1.  Install all the necessary libraries
-2.  Decide for a directory and make the png and mp4 folders, include these folders in the according constants
+2.  Decide for a directory and make the frames, plots, and mp4 folders, include these folders in the according constants
 3.  In molecular_dynamics(), set up all the preferred parameters
 4.  Run the code
 '''
 
-png_folder = '/Users/nicol/Documents/Python_Projects/CTL_II/Soft_Solid/png/' # Make sure that these folder exist, consider the differences between mac and PC
+# Make sure that these folders exist, consider the differences between mac ('/') and PC ('\\')
+frames_folder = '/Users/nicol/Documents/Python_Projects/CTL_II/Soft_Solid/frames/'
+plots_folder = '/Users/nicol/Documents/Python_Projects/CTL_II/Soft_Solid/plots/'
 mp4_folder = '/Users/nicol/Documents/Python_Projects/CTL_II/Soft_Solid/mp4/'
 
 def create_initial_configuration(g, N):
@@ -169,10 +171,9 @@ def order_parameter(N, L, X, Y, cutoff_distance):
 
     return phi, order_array
 
-def visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, cutoff_distance, step, r_0, show_grid):
+def visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, step, r_0, show_grid, phi, order_array):
     plt.clf()
     plt.cla()
-    order_param, order_array = order_parameter(N, L, X, Y, cutoff_distance)
     
     if show_grid: # Don't ask
         for i in range(N):
@@ -245,17 +246,34 @@ def visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, cutoff_distanc
     plt.ylim(-L/2, L/2)
     
     plt.gca().set_aspect('equal', adjustable='box')
-    plt.title(f'$g={g},\;N={N},\;T={T},\;\Delta t={dt},\;t={step*dt:.2f},$ \n $k_S={k_S},\;k_{{LJ}}={k_LJ},\;r_c={r_c},\;r_0^{{\;LJ}}={r_0:.2f},\;\Phi={order_param:.2f}$')
+    plt.title(f'$g={g},\;N={N},\;T={T},\;\Delta t={dt},\;t={step*dt:.1f},$ \n $k_S={k_S},\;k_{{LJ}}={k_LJ},\;r_c={r_c},\;r_0^{{\;LJ}}={r_0:.2f},\;\Phi={phi:.2f}$')
     plt.xticks([])
     plt.yticks([])
+
+    plt.savefig(f'{frames_folder}plot_{step}.png', dpi=100)
+
+def plot_phi(t_list, phi_list, g, N, T, dt, k_S, k_LJ, r_c, r_0):
+    plt.clf()
+    plt.cla()
+    plt.plot(t_list, phi_list)
+    plt.xlabel('t')
+    plt.ylabel('$\Phi$')
+    plt.title(f'$g={g},\;N={N},\;T={T},\;\Delta t={dt},$ \n $k_S={k_S},\;k_{{LJ}}={k_LJ},\;r_c={r_c},\;r_0^{{\;LJ}}={r_0:.2f}$')
+
+    current_datetime = datetime.now()
+    formatted_datetime = current_datetime.strftime("%Y.%m.%d_%H.%M.%S")
+    plot_path = f'{plots_folder}phi_plot_{formatted_datetime}.png'
+    plt.savefig(plot_path, dpi=100)
+    print(f'Phi plot saved successfully: {plot_path}')
+    
 
 def create_video(fps):
     images = []
     images.clear()
 
-    for filename in tqdm(sorted(os.listdir(png_folder), key=lambda x: int(x.split('_')[1].split('.')[0])), desc='Generating video'):
+    for filename in tqdm(sorted(os.listdir(frames_folder), key=lambda x: int(x.split('_')[1].split('.')[0])), desc='Generating video'):
         if filename.endswith('.png'):
-            file_path = os.path.join(png_folder, filename)
+            file_path = os.path.join(frames_folder, filename)
             images.append(imageio.imread(file_path))
     
     current_datetime = datetime.now()
@@ -274,7 +292,7 @@ def create_video(fps):
     print(f"Video created successfully: {video_path}")
 
 def delete_folder_contents():
-    folder_path = png_folder
+    folder_path = frames_folder
     if os.path.exists(folder_path):
         for filename in os.listdir(folder_path):
             file_path = os.path.join(folder_path, filename)
@@ -291,30 +309,34 @@ def delete_folder_contents():
 
 def molecular_dynamics():
     g = 3.5                 # Initial lattice constant
-    N = 10                  # N^2 is the particle count
-    T = 0.2                 # Temperature, usually <1
-    dt = 0.02               # Time step, usually < 0.05
-    k_S = 0.05              # Spring constant
-    steps = 10_000          # Number of simulated steps
+    N = 6                   # N^2 is the particle count
+    T = 0.3                 # Temperature, usually <1
+    dt = 0.03               # Time step, usually < 0.05
+    k_S = 0                 # Spring constant
+    steps = 2_000           # Number of simulated steps
     k_LJ = 1                # Lennard-Jones-prefactor
     r_c = 3.4               # For all r>r_c, the LJ-potential is set to 0
     cutoff_distance = 1.5   # Particles, who have at least one neighbouring particle closer than cutoff_distance contribute to the order parameter
     sigma = 1               # Influences the equilibrium distance (r_0) of the LJ-potential, r_0 = 2^(1/6)/sigma
     r_0 = 2**(1/6)/sigma    # The gradient of the LJ-potential is 0 at r = r_0
-    show_grid = True        # Sets if the grid is shown or not
+    show_grid = False       # Sets if the grid is shown or not
 
     # Initialize system:
     X, Y, L = create_initial_configuration(g, N)
     vx, vy = create_initial_velocities(N, T)
     forces_x, forces_y = total_forces(N, L, X, Y, k_S, k_LJ, r_c, sigma)
+    t_list, phi_list = [], []
 
     # Run the simulation:
     for step in tqdm(range(steps), desc='Generating frames'):
         X, Y, vx, vy, forces_x, forces_y = single_MD_step(N, L, T, dt, X, Y, vx, vy, forces_x, forces_y, k_S, k_LJ, r_c, sigma)
-        visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, cutoff_distance, step, r_0, show_grid)
-        plt.savefig(f'{png_folder}plot_{step}.png', dpi=100)
+        phi, order_array = order_parameter(N, L, X, Y, cutoff_distance)
+        visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, step, r_0, show_grid, phi, order_array)
+        t_list.append(step*dt), phi_list.append(phi)
+    
+    plot_phi(t_list, phi_list, g, N, T, dt, k_S, k_LJ, r_c, r_0)
 
 if __name__ == "__main__":
     delete_folder_contents()    # Deletes all the frames from a previous simulation
     molecular_dynamics()        # Runs the simulation
-    create_video(fps=600)       # Higher fps speeds up the video
+    create_video(fps=1_200)     # Higher fps speeds up the video
