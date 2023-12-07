@@ -56,7 +56,8 @@ This is a testing function that was important during the development of the code
             float: Mean Y-velocity
 ### Get Distance
 Takes the coordinates of two particles as an input and returns the distance vector between particles, the distance scalar and the normalized vector. It considers periodic boundary conditions:
-    $$r_x = 
+
+$$r_x = 
 \begin{cases}
     x_2-x_1 & \text{if } x_2-x_1 \leq L/2, \\
     L-(x_2-x_1) & \text{if } x_2-x_1>L/2.
