@@ -115,7 +115,7 @@ Iterates over every particle and calculates the LJ-force to every other particle
 ### Get Lennard-Jones-Forces Fast
 Iterates over every particle and calculates the Lennard-Jones forces to all the following particles. Then adds this force to the first particle $i$ and substracts it from the second particle $i+j>i$ (actio = reactio). In theory, this should speed up the function by a factor of two for large $N$.
 
-    LJ_forces_fast(N, L, X, Y, k_LJ, r_c, sigma):
+    get_LJ_forces_fast(N, L, X, Y, k_LJ, r_c, sigma):
         ...
 ### Get Total Forces
 Adds the LJ-forces and the spring forces together.
@@ -159,7 +159,7 @@ Calculates the order parameter using the position arrays and outputs this parame
         Calls:
             get_dist(L, x1, x2, y1, y2)
 ### Visualize Configuration
-Plots the system and the used parameters with or without grid lines and saves the plot to the *frames folder*.
+Plots the system and the used parameters with or without grid lines and saves the plot to the *frames folder*. Particles outside of a HDP are plotted green, inside they are plotted red.
 
     visualize_configuration(X, Y, g, N, T, dt, k_S, k_LJ, r_c, L, step, r_0, show_grid, phi, order_array):
         Args:
@@ -245,11 +245,16 @@ Initializes the system using the provided parameters and runs the simulation. Af
 
 In this example code, 25.000 time steps of a $20\times20$ particle system are simulated, which leads to the functions single_MD_step(), order_parameter(), and visualize_configuration() being called 25.000 times. Finally, the frames are wrapped into a 30fps-mp4, with a simulated 1.200 fps, resulting in a approximate video length of 20 seconds.
 
-## Problems
+## Problems & Limitations
 
-Keep track of problems and yet unanswered questions so that all group members know where to focus next. 
+The execution time of the two functions *get_LJ_forces_fast()* and *order_parameter()* scale with the fourth power of *N*. Some different approaches to optimize this would be:
+-   Combining the *order_parameter()*-function with the *get_LJ_forces_fast()*-function, so that the distance between each particle to any other particle has to be only calculated once. This could roughly half the computation time for larger *N*, while still maintaining a time complexity of $N^4$.
+- Lowering the dpi of the plot would lower the computation time by a constant value.
+- The system could be subdivided into smaller square bins, with side lengths $r_c$, and $cutoff\_ value$ respectively. The *get_LJ_forces_fast()*-function could then compare the particle of interest with only the particles that are in the surrounding 4 bins with side length $r_c$ if we consider actio = reactio. The *order_parameter()*-function could do the same with the second binning system. This would optimize code efficiency to a computation time that scales approximately linearly with the particle count, $N^2$ (Suggested by MK).
 
-## Results (speed tests etc.)
+Some aspects of the simulation seem unphysical, for example in the *single_MD_step()* function, the velocity of the particles is held constant, no matter how much energy is stored as potential energy in the Lennard-Jones-potetntial. This may imply, that the total energy of the system changes over time. Also, the periodic boundary conditions lead to a thoroidal topology of the system, which probably has some implications on the behavior of the system, especially for smaller *N*.
+
+## Results
 The example code in chapter *How to Run the Code* provided the following results:
 
 <table>
@@ -271,9 +276,12 @@ The example code in chapter *How to Run the Code* provided the following results
   </tr>
 </table>
 
-The whole simulation took approximately 7 hours using the previously mentioned setup. A video of the same simulation can be found [here](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_videos/demo_17-1.mp4). Here you find more example [videos](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_videos/) and [images](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_images/).
+The whole simulation took approximately 7 hours using the previously mentioned setup. A video of the same simulation can be found [here](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_videos/demo_17-1.mp4). Here you find more example [videos](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_videos/) and [images/plots](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_images/).
 
-The execution time has been measured for only simulating the particle system, for also simulating the order parameter and also for simulating the system, order parameter and plotting the system:
+The execution time has been measured for three different cases: 
+-   Repeatedly calling *single_MD_step()*
+-   Repeatedly calling *single_MD_step()* & *order_parameter()*
+-   Repeatedly calling *single_MD_step()*, *order_parameter()* & *visualize_configuration()*
 
 <table>
   <tr>
@@ -281,3 +289,5 @@ The execution time has been measured for only simulating the particle system, fo
     <td><img src="https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_images/runtime_N2.png" alt="Image 2"></td>
   </tr>
 </table>
+
+As the code is right now, some of the simulations suggested in the README ($30\times 30$ particles, 100.000 time steps) would take more than four days to compute, which was not feasible.
