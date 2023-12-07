@@ -62,6 +62,7 @@ $$r_x =
     x_2-x_1 & \text{if } x_2-x_1 \leq L/2, \\
     L-(x_2-x_1) & \text{if } x_2-x_1>L/2.
 \end{cases}$$
+
 for the x-component of the distance vector.
 
     get_dist(L, x1, x2, y1, y2):
