@@ -4,7 +4,7 @@ In this project, a simulation codebase for a 2D elastic Lennard-Jones model has 
 
 - The initial lattice constant $g$
 - The square root of the particle count $N$
-- The temperature $T$
+- The temperature T
 - The time interval of each simulation step $\Delta t$, resp. $dt$
 - The spring constant $k_S$
 - The number of total steps, $steps$
@@ -277,6 +277,14 @@ The example code in chapter *How to Run the Code* provided the following results
 </table>
 
 The whole simulation took approximately 7 hours using the previously mentioned setup. A video of the same simulation can be found [here](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_videos/demo_17-1.mp4). Here you find more example [videos](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_videos/) and [images/plots](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_images/).
+
+The order parameter has been tracked for systems of different temperatures, using *phi_vs_T()*. It shows, that a higher $T$ has a significant effect on how fast the first HDPs form, but only a negligible effect on $\Phi_{max}$. This could be due to some errors in the code, since smaller $\Phi_{max}$ for increasing $T$ were expected.
+<table>
+  <tr>
+    <td><img src="https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_images/phi_vs_T_1.png" alt="Image 1"></td>
+    <td><img src="https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_images/phi_vs_T_2.png" alt="Image 2"></td>
+  </tr>
+</table>
 
 The execution time has been measured for three different cases: 
 -   Repeatedly calling *single_MD_step()*
