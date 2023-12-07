@@ -19,7 +19,7 @@ Here are some formulas:
     $$r_0=\frac{\sqrt[6]{2}}{\sigma}$$
     $$F_{total} = F_S + F_{LJ}$$
 
-The final version of the project can be found [here](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/soft_solid_20231201.py). A more thorough description of the task is given in the [readme](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/README.md).
+The final version of the project can be found [here](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/final_draft.py). A more thorough description of the task is given in the [readme](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/README.md).
 
 ## Layout of the Algorithm and Functions
 ### Create Initial Configuration
