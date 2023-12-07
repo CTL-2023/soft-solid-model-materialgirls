@@ -272,3 +272,12 @@ The example code in chapter *How to Run the Code* provided the following results
 </table>
 
 The whole simulation took approximately 7 hours using the previously mentioned setup. A video of the same simulation can be found [here](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_videos/demo_17-1.mp4). Here you find more example [videos](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_videos/) and [images](https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_images/).
+
+The execution time has been measured for only simulating the particle system, for also simulating the order parameter and also for simulating the system, order parameter and plotting the system:
+
+<table>
+  <tr>
+    <td><img src="https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_images/runtime_N.png" alt="Image 1"></td>
+    <td><img src="https://github.com/CTL-2023/soft-solid-model-materialgirls/blob/main/Demo_images/runtime_N2.png" alt="Image 2"></td>
+  </tr>
+</table>
