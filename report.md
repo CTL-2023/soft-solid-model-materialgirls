@@ -4,7 +4,7 @@ In this project, a simulation codebase for a 2D elastic Lennard-Jones model has 
 
 - The initial lattice constant $g$
 - The square root of the particle count $N$
-- The temperature T
+- The temperature $T$
 - The time interval of each simulation step $\Delta t$, resp. $dt$
 - The spring constant $k_S$
 - The number of total steps, $steps$
