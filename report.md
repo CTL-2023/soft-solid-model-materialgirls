@@ -186,6 +186,7 @@ Takes all the frames from the frames folder and zips them into a video, which is
 Deletes all the frames from the *frame folder*.
 
     delete_folder_contents():
+        ...
 ### Calculate $\Phi$ vs. $T$
 Runs multiple simulations at several different temperatures. Optionally, per temperature step several simulations can be run and the mean value and the standard deviation is then plotted. Finally, one curve is plotted per temperature step and all curves are merged into one plot, which is saved in the *plots folder*.
 
